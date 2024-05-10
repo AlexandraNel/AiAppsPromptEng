@@ -1,0 +1,25 @@
+{
+  "name": "aiappsprompteng",
+  "version": "1.0.0",
+  "description": "AI Applications and Prompt Engineering, using openAI and LangChain to create AI-powered JS coding tutor API application. This application will provide a POST route to allow the user to ask any question related to coding and will respond with an explanation as well as an example code snippet",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlexandraNel/AiAppsPromptEng.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AlexandraNel/AiAppsPromptEng/issues"
+  },
+  "homepage": "https://github.com/AlexandraNel/AiAppsPromptEng#readme",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "langchain": "^0.1.36"
+  }
+}
