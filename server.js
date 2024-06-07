@@ -3,6 +3,20 @@ const { OpenAI } = require("@langchain/openai");
 require('dotenv').config();
 const express = require ('express');
 const bodyParser = require ('body-parser');
+// The promptTemplate object takes in a combination of user input along with a fixed 
+// template string thereby allowing developers to set hard-coded parameters but at the 
+// same time accepting dynamic user input. Additionally, the promptTemplate object contains 
+// out-of-the-box methods provided by LangChain including the .format() method that we will 
+// use to add variables to our templates! FOR MODEL CONTEXT
+const { PromptTemplate } = require("@langchain/core/prompts");
+
+// Instantiation of a new object called "prompt" using the "PromptTemplate" class
+const prompt = new PromptTemplate ({
+  // provides context to the ai- allows dev to pass instructional prompts
+  template: "You are a programming expert and will answer the user’s coding questions as thoroughly as possible using JavaScript. If the question is unrelated to coding, do not answer.\n{question}",
+  // inserts the input directly into template context
+  inputVariables: ['question']
+});
 
 const app = express();
 const port = 3000;
@@ -21,9 +35,17 @@ const model = new OpenAI({
 
   const promptFunc = async (input) => {
     try {
-        const res = await model.invoke(input);
+      // format the prompt with user input
+      // We use the .format() method on our instantiated prompt object to pass in user input to our template. 
+      // Take note that the key of the object being passed into the format() method matches the variable name, 
+      // question, and the value is the user input captured.
+      const promptInput = await prompt.format({
+        question: input
+      });
+        const res = await model.invoke(promptInput);
         return res;
-    } catch (err) {
+    } 
+    catch (err) {
         console.error(err);
         throw(err);
     }
