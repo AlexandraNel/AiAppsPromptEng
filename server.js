@@ -13,7 +13,10 @@ const { PromptTemplate } = require("@langchain/core/prompts");
 // Instantiation of a new object called "prompt" using the "PromptTemplate" class
 const prompt = new PromptTemplate ({
   // provides context to the ai- allows dev to pass instructional prompts
-  template: "You are a programming expert and will answer the user’s coding questions as thoroughly as possible using JavaScript. If the question is unrelated to coding, do not answer.\n{question}",
+  // the template property is where we inject the user input using \n immediately followed by curly braces surrounding a variable name. 
+  // The variable name is defined in the next property, inputVariables. The inputVariables property is an array and so, if we wanted, 
+  // we could set that array to multiple variables and use all of them in the template.
+  template: "You are a programming expert and will answer the users coding questions as thoroughly as possible using JavaScript. If the question is unrelated to coding, do not answer.\n{question}",
   // inserts the input directly into template context
   inputVariables: ['question']
 });
@@ -59,7 +62,7 @@ app.post('/ask', async (req, res) => {
     if (!userQuestion) {
       return res.status(400).json ({ error: 'Please provide a question in the request body.'});
     }
-  const result = await promptFunc(text);
+  const result = await promptFunc(userQuestion);
 res.json({ result });
   } catch (error) {
     console.error ('Error', error.message);
