@@ -3,23 +3,7 @@ const { OpenAI } = require("@langchain/openai");
 require('dotenv').config();
 const express = require ('express');
 const bodyParser = require ('body-parser');
-// The promptTemplate object takes in a combination of user input along with a fixed 
-// template string thereby allowing developers to set hard-coded parameters but at the 
-// same time accepting dynamic user input. Additionally, the promptTemplate object contains 
-// out-of-the-box methods provided by LangChain including the .format() method that we will 
-// use to add variables to our templates! FOR MODEL CONTEXT
-const { PromptTemplate } = require("@langchain/core/prompts");
-
-// Instantiation of a new object called "prompt" using the "PromptTemplate" class
-const prompt = new PromptTemplate ({
-  // provides context to the ai- allows dev to pass instructional prompts
-  // the template property is where we inject the user input using \n immediately followed by curly braces surrounding a variable name. 
-  // The variable name is defined in the next property, inputVariables. The inputVariables property is an array and so, if we wanted, 
-  // we could set that array to multiple variables and use all of them in the template.
-  template: "You are a programming expert and will answer the users coding questions as thoroughly as possible using JavaScript. If the question is unrelated to coding, do not answer.\n{question}",
-  // inserts the input directly into template context
-  inputVariables: ['question']
-});
+const { StructuredOutputParser } = require ("langchain/output_parsers");
 
 const app = express();
 const port = 3000;
@@ -34,8 +18,37 @@ const model = new OpenAI({
     modelName: 'gpt-3.5-turbo' //which lang model to use
   });
 
-  // async function res holds response value 
+  // StructurdParser defines a schema for the ouput and uses an outofbox method auch as fromnamesandDescriptions and getFormatInstructions
+const parser = StructuredOutputParser.fromNamesAndDescriptions({
+  code: "Javascript code that answers the user's question",
+  explanation: "detailed explanation of the example code provided"
+});
 
+// under the new instatiated object we create a new variable that holds the value of formatInstructions, this is passed
+// to our template for how we want the final response to be strcutured
+const formatInstructions = parser.getFormatInstructions();
+
+
+  // The promptTemplate object takes in a combination of user input along with a fixed 
+// template string thereby allowing developers to set hard-coded parameters but at the 
+// same time accepting dynamic user input. Additionally, the promptTemplate object contains 
+// out-of-the-box methods provided by LangChain including the .format() method that we will 
+// use to add variables to our templates! FOR MODEL CONTEXT
+const { PromptTemplate } = require("@langchain/core/prompts");
+
+// Instantiation of a new object called "prompt" using the "PromptTemplate" class
+const prompt = new PromptTemplate ({
+  // provides context to the ai- allows dev to pass instructional prompts
+  // the template property is where we inject the user input using \n immediately followed by curly braces surrounding a variable name. 
+  // The variable name is defined in the next property, inputVariables. The inputVariables property is an array and so, if we wanted, 
+  // we could set that array to multiple variables and use all of them in the template.
+  template: "You are a programming expert and will answer the users coding questions as thoroughly as possible using JavaScript. If the question is unrelated to coding, do not answer.\n{format_instructions}\n{question}",
+  // inserts the input directly into template context
+  inputVariables: ['question'],
+  partialVariables: { format_instructions: formatInstructions}
+});
+
+  // async function res holds response value 
   const promptFunc = async (input) => {
     try {
       // format the prompt with user input
@@ -45,8 +58,19 @@ const model = new OpenAI({
       const promptInput = await prompt.format({
         question: input
       });
+
+      // Call the model with the formatted prompt
         const res = await model.invoke(promptInput);
-        return res;
+
+        // for non coding q's model returns error message causing parse() to throw an dexeption
+        // In this case, return the error message instead of the parsed results
+
+        try{
+          const parsedResults = await parser.parse(res);
+          return parsedResults;
+        } catch (err) {
+          return res;
+        }
     } 
     catch (err) {
         console.error(err);
